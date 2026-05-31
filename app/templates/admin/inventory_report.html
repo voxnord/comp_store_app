@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Отчет по наличию товаров{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-boxes"></i>
+                        Отчет по наличию товаров на {{ report_date }}
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ url_for('admin.export_inventory') }}" class="btn btn-success btn-sm">
+                            <i class="fas fa-file-excel"></i> Экспорт в CSV
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary btn-sm">
+                            <i class="fas fa-print"></i> Печать
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Товар</th>
+                                    <th>Артикул</th>
+                                    <th>Категория</th>
+                                    <th>Склад</th>
+                                    <th>Количество</th>
+                                    <th>Зарезервировано</th>
+                                    <th>Доступно</th>
+                                    <th>Цена закупки</th>
+                                    <th>Цена продажи</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in inventory %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ item.product_name }}</td>
+                                    <td>{{ item.vendor_code }}</td>
+                                    <td>{{ item.category_name }}</td>
+                                    <td>{{ item.warehouse_name }}</td>
+                                    <td class="text-right">{{ item.quantity }}</td>
+                                    <td class="text-right">{{ item.reserved_quantity }}</td>
+                                    <td class="text-right">{{ item.available_quantity }}</td>
+                                    <td class="text-right">{{ "%.2f"|format(item.purchase_price) }} ₽</td>
+                                    <td class="text-right">{{ "%.2f"|format(item.selling_price) }} ₽</td>
+                                    <td>
+                                        {% if item.stock_status == 'НИЗКИЙ' %}
+                                            <span class="badge badge-danger">НИЗКИЙ</span>
+                                        {% elif item.stock_status == 'ВЫСОКИЙ' %}
+                                            <span class="badge badge-warning">ВЫСОКИЙ</span>
+                                        {% else %}
+                                            <span class="badge badge-success">НОРМА</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold">
+                                    <td colspan="5" class="text-right">Итого:</td>
+                                    <td class="text-right">
+                                        {{ inventory|sum(attribute='quantity') }}
+                                    </td>
+                                    <td class="text-right">
+                                        {{ inventory|sum(attribute='reserved_quantity') }}
+                                    </td>
+                                    <td class="text-right">
+                                        {{ inventory|sum(attribute='available_quantity') }}
+                                    </td>
+                                    <td class="text-right">
+                                        {{ "%.2f"|format(inventory|sum(attribute='total_cost')) }} ₽
+                                    </td>
+                                    <td class="text-right">
+                                        {{ "%.2f"|format(inventory|sum(attribute='total_value')) }} ₽
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('.table').DataTable({
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+        "pageLength": 50,
+        "order": [[1, 'asc']],
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Russian.json"
+        }
+    });
+});
+</script>
+{% endblock %}

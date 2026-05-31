@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Отчеты{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">📊 Отчеты</h1>
+    
+    <div class="table-container mb-4 filter-container">
+        <form method="get">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Тип отчета</label>
+                    <select name="type" class="form-control" required>
+                        <option value="sales" {% if report_type == 'sales' %}selected{% endif %}>Продажи</option>
+                        <option value="products" {% if report_type == 'products' %}selected{% endif %}>Товары</option>
+                        <option value="customers" {% if report_type == 'customers' %}selected{% endif %}>Покупатели</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Дата начала</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Дата окончания</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date }}" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Применить фильтр
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    {% if report_type == 'sales' %}
+    <div class="table-container report-table">
+        <h4 class="mb-3">📈 Отчет по продажам</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Количество продаж</th>
+                        <th>Общая выручка</th>
+                        <th>Средний чек</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if data and data.sales %}
+                        {% for sale in data.sales %}
+                        <tr>
+                            <td>{{ sale.sale_date.strftime('%d.%m.%Y') if sale.sale_date else '-' }}</td>
+                            <td>{{ sale.sales_count }}</td>
+                            <td class="text-success">{{ "{:,.2f}".format(sale.total_revenue) }} ₽</td>
+                            <td>{{ "{:,.2f}".format(sale.avg_sale) }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Нет данных за выбранный период</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if report_type == 'products' %}
+    <div class="table-container report-table">
+        <h4 class="mb-3">📦 Отчет по товарам</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Категория</th>
+                        <th>Продано</th>
+                        <th>Выручка</th>
+                        <th>Средняя цена</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if data and data.products %}
+                        {% for product in data.products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td><span class="badge badge-info">{{ product.category }}</span></td>
+                            <td>{{ product.total_sold }} шт.</td>
+                            <td class="text-success">{{ "{:,.2f}".format(product.total_revenue) }} ₽</td>
+                            <td>{{ "{:,.2f}".format(product.avg_price) }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Нет данных за выбранный период</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if report_type == 'customers' %}
+    <div class="table-container report-table">
+        <h4 class="mb-3">👥 Отчет по покупателям</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Покупатель</th>
+                        <th>Тип</th>
+                        <th>Покупок</th>
+                        <th>Потрачено</th>
+                        <th>Средний чек</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if data and data.customers %}
+                        {% for customer in data.customers %}
+                        <tr>
+                            <td>{{ customer.name }}</td>
+                            <td>
+                                <span class="badge {% if customer.type == 'Физическое лицо' %}badge-info{% else %}badge-warning{% endif %}">
+                                    {{ customer.type }}
+                                </span>
+                            </td>
+                            <td>{{ customer.purchases_count }}</td>
+                            <td class="text-success">{{ "{:,.2f}".format(customer.total_spent) }} ₽</td>
+                            <td>{{ "{:,.2f}".format(customer.avg_purchase) }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Нет данных за выбранный период</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if data %}
+    <div class="mt-3">
+        <a href="{{ url_for('admin.export_sales_report', start_date=start_date, end_date=end_date) }}" 
+           class="btn btn-success">
+            <i class="fas fa-download"></i> Экспортировать в CSV
+        </a>
+        <a href="{{ url_for('admin.inventory_report') }}" 
+           class="btn btn-info">
+            <i class="fas fa-warehouse"></i> Отчет по складу
+        </a>
+        <a href="{{ url_for('admin.sales_history') }}" 
+           class="btn btn-secondary">
+            <i class="fas fa-history"></i> История продаж
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

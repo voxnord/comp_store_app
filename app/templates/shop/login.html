@@ -1,0 +1,135 @@
+{% extends "shop_base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-5 col-lg-4">
+            <div class="login-card p-4 shadow-sm rounded border">
+                <div class="login-header text-center mb-4">
+                    <div class="login-icon mb-2" style="font-size: 3rem; color: #48BB78;">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h2 class="mb-1">Вход покупателя</h2>
+                    <p class="text-muted">Войдите, чтобы продолжить покупки</p>
+                </div>
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-user me-2"></i>Логин
+                        </label>
+                        <input type="text" name="username" class="form-control" 
+                               placeholder="Введите ваш логин" required autofocus>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-lock me-2"></i>Пароль
+                        </label>
+                        <input type="password" name="password" class="form-control" 
+                               placeholder="Введите ваш пароль" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Войти
+                    </button>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">
+                            Нет аккаунта? 
+                            <a href="{{ url_for('shop.register') }}" class="text-decoration-none">
+                                Зарегистрируйтесь
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <a href="{{ url_for('shop.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Вернуться в магазин
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #F0F4F8;
+        color: #243B53;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    
+    /* Навигация */
+    .shop-navbar {
+        background-color: #8CA0B5 !important; 
+        border-bottom: 2px solid #48BB78; 
+    }
+    
+    .product-card, .login-card, .register-card, .cart-card, .empty-cart {
+        background-color: #D9E2EC !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+        color: #243B53 !important;
+        border-radius: 12px;
+    }
+
+    .product-title, .login-card h2, .register-card h2, h1, .cart-table th {
+        color: #243B53 !important;
+    }
+
+    .product-vendor, .text-muted {
+        color: #48BB78 !important;
+    }
+
+    .product-price, .cart-total-amount {
+        color: #000000 !important;
+        font-weight: 700;
+    }
+
+    /* Кнопки */
+    .btn-success, .btn-primary, .btn-login {
+        background-color: #48BB78 !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    .btn-success:hover, .btn-primary:hover {
+        background-color: #3ba366 !important;
+    }
+
+    .btn-outline-primary, .btn-outline-secondary {
+        border-color: #8CA0B5 !important;
+        color: #243B53 !important;
+    }
+
+    /* Формы */
+    .form-control {
+        background-color: #ffffff !important;
+        border: 1px solid #8CA0B5 !important;
+        color: #000000 !important;
+    }
+
+    .form-label i {
+        color: #48BB78;
+    }
+
+    .cart-table {
+        color: #243B53 !important;
+    }
+    
+    .cart-table tr {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    /* Футер */
+    footer {
+        background-color: #D9E2EC !important;
+        border-top: 1px solid #8CA0B5 !important;
+        color: #243B53 !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}База клиентов{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">👥 Управление клиентами</h1>
+
+    <div class="table-container mb-4">
+        <h4 class="mb-3">➕ Добавить нового клиента</h4>
+        <form action="{{ url_for('manager.add_customer') }}" method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Логин</label>
+                    <input type="text" name="username" class="form-control" placeholder="Логин для входа" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Фамилия</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Иванов" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Имя</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="Иван" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Телефон</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+7 900 123-45-67">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="example@mail.com">
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Адрес</label>
+                    <input type="text" name="address" class="form-control" placeholder="Адрес доставки">
+                </div>
+                <div class="col-12 d-flex justify-content-between align-items-center mt-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="consent_pdn" id="pdnCheck" checked required>
+                        <label class="form-check-label" for="pdnCheck">Согласие на ПДн</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Зарегистрировать клиента
+                    </button>
+                </div>
+            </div>
+            <div class="form-text mt-2">
+                Пароль по умолчанию: <strong>123456</strong>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <h4 class="mb-3">📋 Список клиентов</h4>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Контакты</th>
+                        <th>Адрес</th>
+                        <th class="col-status">ПДн</th>
+                        <th style="width: 100px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="fw-bold">{{ c.last_name }} {{ c.first_name }}</td>
+                        <td>
+                            <div>{{ c.phone or '—' }}</div>
+                            <small class="text-muted">{{ c.email or '' }}</small>
+                        </td>
+                        <td><small>{{ c.address or '—' }}</small></td>
+                        <td class="col-status">
+                            {% if c.consent_pdn %}
+                            <span class="badge bg-success w-100">Согласен</span>
+                            {% else %}
+                            <span class="badge bg-danger w-100">Нет</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary w-100 edit-customer-btn" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editCustomerModal"
+                                    data-id="{{ c.id }}"
+                                    data-fname="{{ c.first_name }}"
+                                    data-lname="{{ c.last_name }}"
+                                    data-phone="{{ c.phone or '' }}"
+                                    data-email="{{ c.email or '' }}"
+                                    data-address="{{ c.address or '' }}"
+                                    data-consent="{{ 'true' if c.consent_pdn else 'false' }}">
+                                <i class="fas fa-edit"></i> Править
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактирование данных</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCustomerForm" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Фамилия</label>
+                        <input type="text" name="last_name" id="edit_lname" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Имя</label>
+                        <input type="text" name="first_name" id="edit_fname" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <input type="tel" name="phone" id="edit_phone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" id="edit_email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Адрес</label>
+                        <input type="text" name="address" id="edit_address" class="form-control">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="consent_pdn" id="edit_consent">
+                        <label class="form-check-label">Согласие на ПДн</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const editModal = document.getElementById('editCustomerModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const form = document.getElementById('editCustomerForm');
+            
+            const id = button.getAttribute('data-id');
+            form.action = "{{ url_for('manager.edit_customer', customer_id=0) }}".replace('0', id);
+            
+            document.getElementById('edit_fname').value = button.getAttribute('data-fname');
+            document.getElementById('edit_lname').value = button.getAttribute('data-lname');
+            document.getElementById('edit_phone').value = button.getAttribute('data-phone');
+            document.getElementById('edit_email').value = button.getAttribute('data-email');
+            document.getElementById('edit_address').value = button.getAttribute('data-address');
+            document.getElementById('edit_consent').checked = (button.getAttribute('data-consent') === 'true');
+        });
+    }
+});
+</script>
+{% endblock %}

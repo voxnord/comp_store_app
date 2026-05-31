@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Склад{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="fas fa-warehouse"></i> Управление складом</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Всего товаров</h3>
+                <div class="value">6</div>
+                <small class="text-muted">в ассортименте</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>На основном складе</h3>
+                <div class="value">107</div>
+                <small class="text-muted">единиц товара</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Требуют пополнения</h3>
+                <div class="value text-danger">{{ stats.low_stock|length }}</div>
+                <small class="text-danger">ниже минимального</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <h3>Складские операции</h3>
+                <div class="value">12</div>
+                <small class="text-muted">за сегодня</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="table-container">
+                <h4 class="mb-3"><i class="fas fa-exclamation-triangle"></i> Товары, требующие пополнения</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Товар</th>
+                                <th>Артикул</th>
+                                <th>Склад</th>
+                                <th>Остаток</th>
+                                <th>Минимум</th>
+                                <th>Разница</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stats.low_stock %}
+                            <tr class="table-warning">
+                                <td>{{ item.product_name }}</td>
+                                <td>{{ item.vendor_code }}</td>
+                                <td>{{ item.warehouse_name }}</td>
+                                <td>{{ item.available_quantity }}</td>
+                                <td>{{ item.min_stock_level }}</td>
+                                <td class="text-danger">
+                                    {{ item.min_stock_level - item.available_quantity }} шт.
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-success">
+                                    <i class="fas fa-check-circle"></i> Все остатки в норме
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Сотрудники{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">👔 Управление сотрудниками</h1>
+
+    <div class="table-container mb-4 filter-container">
+        <h4 class="mb-3">➕ Добавить сотрудника</h4>
+        <form action="{{ url_for('admin.add_employee') }}" method="post">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Фамилия</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Фамилия" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Имя</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="Имя" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" name="middle_name" class="form-control" placeholder="Отчество">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Должность</label>
+                    <input type="text" name="position" class="form-control" placeholder="Должность" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Телефон</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+7">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="Email">
+                </div>
+            </div>
+            <div class="row g-3 mt-1">
+                <div class="col-md-2">
+                    <label class="form-label">Дата приема</label>
+                    <input type="date" name="hire_date" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Оклад (₽)</label>
+                    <input type="number" name="salary" class="form-control" placeholder="0.00" step="0.01">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input" id="is_active" checked>
+                        <label class="form-check-label" for="is_active">Активен</label>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Добавить
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container report-table">
+        <h4 class="mb-3">📋 Список сотрудников</h4>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Фамилия</th>
+                        <th>Имя</th>
+                        <th>Отчество</th>
+                        <th>Должность</th>
+                        <th>Телефон</th>
+                        <th>Email</th>
+                        <th>Дата приема</th>
+                        <th>Оклад</th>
+                        <th>Статус</th>
+                        <th style="width: 180px;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if employees %}
+                        {% for emp in employees %}
+                        <tr>
+                            <td>{{ emp.id }}</td>
+                            <td>{{ emp.last_name }}</td>
+                            <td>{{ emp.first_name }}</td>
+                            <td>{{ emp.middle_name or '-' }}</td>
+                            <td><span class="badge badge-info ">{{ emp.position }}</span></td>
+                            <td>{{ emp.phone or '-' }}</td>
+                            <td>{{ emp.email or '-' }}</td>
+                            <td>{{ emp.hire_date.strftime('%d.%m.%Y') if emp.hire_date else '-' }}</td>
+                            <td class="text-success">{{ "{:,.2f}".format(emp.salary) if emp.salary else '0.00' }} ₽</td>
+                            <td>
+                                {% if emp.is_active %}
+                                <span class="badge badge-success text-dark">Активен</span>
+                                {% else %}
+                                <span class="badge badge-danger text-dark">Неактивен</span>
+                                {% endif %}
+                            </td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-warning edit-employee"
+                                        data-id="{{ emp.id }}"
+                                        data-last_name="{{ emp.last_name }}"
+                                        data-first_name="{{ emp.first_name }}"
+                                        data-middle_name="{{ emp.middle_name or '' }}"
+                                        data-position="{{ emp.position }}"
+                                        data-phone="{{ emp.phone or '' }}"
+                                        data-email="{{ emp.email or '' }}"
+                                        data-hire_date="{{ emp.hire_date }}"
+                                        data-salary="{{ emp.salary }}"
+                                        data-is_active="{{ emp.is_active }}">
+                                    <i class="fas fa-edit"></i> Изменить
+                                </button>
+                                <form action="{{ url_for('admin.delete_employee', id=emp.id) }}" 
+                                      method="post" 
+                                      style="display:inline;"
+                                      onsubmit="return confirm('Удалить сотрудника {{ emp.last_name }} {{ emp.first_name }}?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Удалить
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted">Нет сотрудников</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editEmployeeForm" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактирование сотрудника</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="editEmployeeId">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="editLastName" class="form-label">Фамилия</label>
+                            <input type="text" class="form-control" id="editLastName" name="last_name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editFirstName" class="form-label">Имя</label>
+                            <input type="text" class="form-control" id="editFirstName" name="first_name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editMiddleName" class="form-label">Отчество</label>
+                            <input type="text" class="form-control" id="editMiddleName" name="middle_name">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="editPosition" class="form-label">Должность</label>
+                            <input type="text" class="form-control" id="editPosition" name="position" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editPhone" class="form-label">Телефон</label>
+                            <input type="tel" class="form-control" id="editPhone" name="phone">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editHireDate" class="form-label">Дата приема</label>
+                            <input type="date" class="form-control" id="editHireDate" name="hire_date">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label for="editSalary" class="form-label">Оклад (₽)</label>
+                            <input type="number" step="0.01" class="form-control" id="editSalary" name="salary">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" class="form-check-input" id="editIsActive" name="is_active">
+                                <label class="form-check-label" for="editIsActive">Активен</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var editButtons = document.querySelectorAll('.edit-employee');
+    var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+    var form = document.getElementById('editEmployeeForm');
+
+    editButtons.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('editEmployeeId').value = btn.dataset.id;
+            document.getElementById('editLastName').value = btn.dataset.last_name;
+            document.getElementById('editFirstName').value = btn.dataset.first_name;
+            document.getElementById('editMiddleName').value = btn.dataset.middle_name;
+            document.getElementById('editPosition').value = btn.dataset.position;
+            document.getElementById('editPhone').value = btn.dataset.phone;
+            document.getElementById('editEmail').value = btn.dataset.email;
+            document.getElementById('editHireDate').value = btn.dataset.hire_date;
+            document.getElementById('editSalary').value = btn.dataset.salary;
+            document.getElementById('editIsActive').checked = btn.dataset.is_active === 'True';
+            
+            form.action = "{{ url_for('admin.edit_employee', id=0) }}".replace('0', btn.dataset.id);
+            editModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

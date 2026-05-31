@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Компьютерный магазин{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
+            <span class="text-white">💻 Компьютерный магазин</span>
+        </a>
+        <div class="d-flex align-items-center">
+            {% if session.user_id %}
+                <span class="text-light me-3 d-none d-md-inline">{{ session.employee_name }} ({{ session.role_name }})</span>
+                <a href="{{ url_for('main.logout') }}" class="btn btn-outline-danger btn-sm">Выход</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="btn btn-primary btn-sm">Вход</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+{% if session.user_id %}
+<aside class="sidebar p-3">
+    <ul class="nav flex-column">
+        <li class="nav-section-title text-muted small text-uppercase mb-2">Основное</li>
+        
+        <li class="nav-item">
+            <a class="nav-link {% if 'pos' in request.path %}active{% endif %}" href="{{ url_for('manager.pos') }}">
+                🛒 Касса (POS)
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'products' in request.path %}active{% endif %}" href="{{ url_for('manager.products') }}">
+                📦 Товары
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if 'customers' in request.path %}active{% endif %}" href="{{ url_for('manager.customers') }}">
+                👥 Клиенты
+            </a>
+        </li>
+
+        {% if session.role_name == 'Администратор' %}
+            <li class="nav-section-title text-muted small text-uppercase mt-4 mb-2">Управление</li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'users' in request.path %}active{% endif %}" href="{{ url_for('admin.users') }}">
+                    👤 Пользователи
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'categories' in request.path %}active{% endif %}" href="{{ url_for('admin.categories') }}">
+                    📁 Категории
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'sales' in request.path %}active{% endif %}" href="{{ url_for('admin.sales_history') }}">
+                    📊 История продаж
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</aside>
+{% endif %}
+
+<main class="content {% if not session.user_id %}ms-0{% endif %}">
+    <div class="container-fluid py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

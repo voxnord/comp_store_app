@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Товарный чек #{{ sale.sale_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="receipt-card">
+                <div class="receipt-header text-center">
+                    <h3 class="mb-1">ТОВАРНЫЙ ЧЕК</h3>
+                    <small>Магазин компьютерной техники</small>
+                </div>
+                
+                <div class="receipt-body">
+                    <div class="receipt-info">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Чек №:</strong> {{ sale.sale_number }}
+                            </div>
+                            <div class="col-6 text-end">
+                                <strong>Дата:</strong> {{ sale.sale_date.strftime('%d.%m.%Y %H:%M') }}
+                            </div>
+                        </div>
+                        
+                        {% if sale.customer_name %}
+                        <div class="row mb-2">
+                            <div class="col-12">
+                                <strong>Покупатель:</strong> {{ sale.customer_name }}
+                                {% if sale.customer_phone %}
+                                <br><strong>Телефон:</strong> {{ sale.customer_phone }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <strong>Продавец:</strong> {{ sale.employee_name }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="receipt-divider">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm receipt-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th>ТОВАР</th>
+                                    <th class="text-center" style="width: 80px;">КОЛ-ВО</th>
+                                    <th class="text-end" style="width: 100px;">ЦЕНА</th>
+                                    <th class="text-end" style="width: 80px;">СКИДКА</th>
+                                    <th class="text-end" style="width: 120px;">СУММА</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ item.product_name }}</td>
+                                    <td class="text-center">{{ item.quantity }}</td>
+                                    <td class="text-end">{{ "%.2f"|format(item.price) }} ₽</td>
+                                    <td class="text-end">
+                                        {% if item.discount > 0 %}
+                                            {{ "%.0f"|format(item.discount) }}%
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end"><strong>{{ "%.2f"|format(item.total_line) }} ₽</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <hr class="receipt-divider">
+                    
+                    <div class="receipt-totals">
+                        <div class="row mb-2">
+                            <div class="col-8 text-end">
+                                Общая сумма:
+                            </div>
+                            <div class="col-4 text-end">
+                                {{ "%.2f"|format(sale.total_amount) }} ₽
+                            </div>
+                        </div>
+                        
+                        {% if sale.discount_amount > 0 %}
+                        <div class="row mb-2">
+                            <div class="col-8 text-end">
+                                Скидка:
+                            </div>
+                            <div class="col-4 text-end text-danger">
+                                -{{ "%.2f"|format(sale.discount_amount) }} ₽
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row receipt-final-total">
+                            <div class="col-8 text-end">
+                                <strong>ИТОГО К ОПЛАТЕ:</strong>
+                            </div>
+                            <div class="col-4 text-end">
+                                <strong>{{ "%.2f"|format(sale.final_amount) }} ₽</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="receipt-divider">
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <strong>Способ оплаты:</strong>
+                            {% if sale.payment_method == 'наличные' %}
+                                Наличные
+                            {% elif sale.payment_method == 'карта' %}
+                                Банковская карта
+                            {% else %}
+                                Безналичный расчет
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4 mb-4">
+                        <div class="col-6 text-center">
+                            <div class="signature-line"></div>
+                            <small class="text-muted">Подпись продавца</small>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="signature-line"></div>
+                            <small class="text-muted">Подпись покупателя</small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center receipt-footer">
+                        <small>
+                            Спасибо за покупку!<br>
+                            Гарантийный срок устанавливается в соответствии с законодательством РФ
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="receipt-actions text-center">
+                    <button onclick="window.print()" class="btn btn-primary me-2">
+                        Распечатать чек
+                    </button>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                        Назад
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .receipt-card {
+        background: #ffffff !important;
+        border: 1px solid #8CA0B5 !important;
+        color: #000000 !important;
+        padding: 30px;
+        border-radius: 4px;
+    }
+
+    .receipt-header {
+        border-bottom: 2px solid #243B53 !important;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .receipt-header h3 { color: #243B53 !important; font-weight: 700; }
+
+    .receipt-table thead {
+        background-color: #F0F4F8 !important;
+    }
+
+    .receipt-table th { color: #243B53 !important; border-bottom: 1px solid #8CA0B5; }
+    .receipt-table td { color: #000000 !important; }
+
+    .receipt-totals {
+        background-color: #F0F4F8 !important;
+        border: 1px solid #8CA0B5 !important;
+        padding: 15px;
+        margin-top: 20px;
+    }
+
+    .receipt-final-total {
+        font-size: 1.5rem;
+        color: #48BB78 !important;
+    }
+
+    @media print {
+        .btn, .navbar, footer { display: none !important; }
+        body { background: white !important; padding: 0; }
+        .receipt-card { border: none !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Касса{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="fas fa-cash-register"></i> Кассовый терминал</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px; padding: 1.5rem;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">Выручка сегодня</h3>
+                <div class="value" style="font-size: 1.8rem; font-weight: 700; color: #212529; margin: 0.5rem 0;">{{ "%.2f"|format(stats.today.revenue_today or 0) }} ₽</div>
+                <p class="small text-muted mb-0">Личный показатель за смену</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px; padding: 1.5rem;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">Продажи сегодня</h3>
+                <div class="value" style="font-size: 1.8rem; font-weight: 700; color: #212529; margin: 0.5rem 0;">{{ stats.today.sales_today or 0 }}</div>
+                <small class="text-muted">средний чек: {{ "%.2f"|format(stats.today.avg_sale_today or 0) }} ₽</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px; padding: 1.5rem;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">Быстрый поиск</h3>
+                <form action="{{ url_for('manager.pos') }}" method="get" class="mt-2">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control border-secondary border-opacity-25" placeholder="Артикул или название...">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <a href="{{ url_for('manager.pos') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-plus-circle fa-3x mb-3 text-success"></i>
+                <h3>Новая продажа</h3>
+                <p class="small text-dark text-opacity-75 mb-0">Открыть терминал и начать обслуживание клиента</p>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ url_for('admin.sales_history') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-list-alt fa-3x mb-3 text-primary"></i>
+                <h3>Последние чеки</h3>
+                <p class="small text-dark text-opacity-75 mb-0">Просмотр и печать последних операций</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card-link-blue {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #D4E8FF;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 12px;
+        height: 100%;
+        text-decoration: none;
+    }
+
+    .stat-card-link-blue:hover {
+        transform: translateY(-5px);
+        filter: brightness(0.95);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-card-link-blue h3 {
+        color: #212529;
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .form-control:focus {
+        border-color: #a5b8cc;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}

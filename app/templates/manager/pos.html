@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Рабочее место менеджера (POS){% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+    
+    .product-card { 
+        transition: 0.2s; 
+        border: 1px solid #8CA0B5; 
+        background: #D9E2EC; 
+        color: #243B53;
+    }
+    
+    .product-card:hover { 
+        border-color: #48BB78; 
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .product-card .card-title { color: #243B53 !important; font-weight: 600; }
+    .product-card .text-primary { color: #000000 !important; font-weight: 700; }
+
+    .cart-container { 
+        position: sticky; 
+        top: 80px; 
+        height: calc(100vh - 120px); 
+        background: #D9E2EC; /* Фон панели заказа */
+        border: 1px solid #8CA0B5;
+    }
+
+    .cart-container h5 { color: #243B53 !important; }
+    
+    #total-amount { color: #000000 !important; }
+
+    .form-select, .form-control {
+        background-color: #ffffff !important;
+        border: 1px solid #8CA0B5 !important;
+        color: #000000 !important;
+    }
+
+    #checkout-btn {
+        background-color: #48BB78 !important;
+        border: none;
+        color: white;
+    }
+
+    #checkout-btn:hover {
+        background-color: #3ba366 !important;
+        color: white;
+    }
+
+    /* Стиль кнопки в корзину */
+    .btn-add-cart {
+        background-color: #48BB78;
+        color: white;
+        border: none;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .btn-add-cart:hover {
+        background-color: #3ba366;
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pos-grid">
+    <div class="products-section">
+        <div class="row g-3">
+            {% for product in products %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card product-card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <span class="badge bg-secondary mb-2">{{ product.category_name }}</span>
+                        <h6 class="card-title mb-1">{{ product.name }}</h6>
+                        <p class="text-muted small mb-2">Арт: {{ product.sku }}</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary">{{ product.price }} ₽</span>
+                                <span class="small {% if product.stock_quantity < 5 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ product.stock_quantity }} шт.
+                                </span>
+                            </div>
+                            
+                            <button class="btn btn-sm btn-add-cart js-add-to-cart"
+                                    data-id="{{ product.id }}"
+                                    data-name="{{ product.name }}"
+                                    data-price="{{ product.price }}"
+                                    data-stock="{{ product.stock_quantity }}">
+                                В корзину
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="cart-container shadow p-3 rounded d-flex flex-column">
+        <h5 class="mb-4">Текущий заказ</h5>
+        
+        <div class="flex-grow-1 overflow-auto mb-3" id="cart-items">
+            <p class="text-muted text-center py-5">Корзина пуста</p>
+        </div>
+
+        <div class="border-top pt-3">
+            <select class="form-select mb-3" id="customer-select">
+                <option value="">Розничный покупатель</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}">{{ customer.last_name }} {{ customer.first_name }}</option>
+                {% endfor %}
+            </select>
+
+            <div class="d-flex justify-content-between h4 mb-4">
+                <span>Итого:</span>
+                <span id="total-amount">0.00 ₽</span>
+            </div>
+
+            <button class="btn btn-primary w-100 btn-lg py-3 fw-bold" id="checkout-btn">
+                ОФОРМИТЬ ПРОДАЖУ
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+{% endblock %}

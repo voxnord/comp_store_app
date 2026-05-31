@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Панель администратора</h1>
+
+    <div class="row">
+        <div class="col-md-3 d-flex flex-column">
+            <div class="stat-card mb-3">
+                <h3>Продажи сегодня</h3>
+                <div class="value">{{ stats.today.sales_today or 0 }}</div>
+                <p class="small text-muted">Общие продажи за месяц</p>
+                <p class="mb-0">₽ {{ "%.2f"|format(stats.today.revenue_today or 0) }}</p>
+            </div>
+
+            <div class="stat-card mb-3">
+                <h3>Средний чек</h3>
+                <div class="value">{{ "%.2f"|format(stats.today.avg_sale_today or 0) }} ₽</div>
+                <p class="small text-muted">Сегодня</p>
+            </div>
+
+            <div class="stat-card mb-3">
+                <h3>Товаров на складе</h3>
+                <div class="value">{{ stats.products_in_stock or 152 }}</div>
+                <p class="small text-muted">с низким остатком</p>
+            </div>
+
+            <div class="stat-card mb-3 flex-grow-1">
+                <h3>Активных пользователей</h3>
+                <div class="value">{{ stats.active_users or 4 }}</div>
+                <p class="small text-muted">в сети</p>
+            </div>
+        </div>
+
+        <div class="col-md-9 d-flex flex-column">
+            <div class="stat-card mb-3" style="min-height: 200px;">
+                <h3>Лидер продаж</h3>
+                {% if stats.leader %}
+                    <div class="display-4 mt-3" style="font-size: calc(1.5rem + 1.5vw);">{{ stats.leader.name }}</div>
+                    <p class="mt-2">
+                        Продано всего: <strong>{{ stats.leader.total_sold }}</strong> шт.
+                    </p>
+                {% else %}
+                    <div class="text-muted mt-4">Данные отсутствуют</div>
+                {% endif %}
+            </div>
+
+            <div class="row flex-grow-1">
+                <div class="col-md-6 mb-3">
+                    <div class="table-container h-100">
+                        <h4 class="mb-3">Низкие остатки</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Товар</th>
+                                        <th>Остаток</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in stats.low_stock %}
+                                    <tr>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.total_stock }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center">Нет товаров</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="table-container h-100">
+                        <h4 class="mb-3">Топ товаров</h4>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Товар</th>
+                                        <th>Продано (шт.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in stats.top_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td class="fw-bold">{{ product.total_sold }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center">Нет данных</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('admin.categories') }}" class="btn w-100 py-3 shadow-sm" style="background-color: #D4E8FF; border: none; color: #333;">
+                <h3 class="mb-0">📦 Категории: {{ stats.categories_count or 12 }}</h3>
+            </a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('admin.customers') }}" class="btn w-100 py-3 shadow-sm" style="background-color: #D4E8FF; border: none; color: #333;">
+                <h3 class="mb-0">👥 Покупатели: {{ stats.customers_count or 48 }}</h3>
+            </a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a href="{{ url_for('admin.sales_history') }}" class="btn w-100 py-3 shadow-sm" style="background-color: #D4E8FF; border: none; color: #333;">
+                <h3 class="mb-0">📜 История продаж: {{ stats.total_sales_count or 0 }}</h3>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .row.flex-grow-1 {
+        display: flex;
+    }
+    .table-container.h-100 {
+        display: flex;
+        flex-direction: column;
+    }
+    .btn:hover {
+        filter: brightness(95%);
+        transition: 0.2s;
+    }
+</style>
+{% endblock %}

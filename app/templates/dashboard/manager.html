@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Панель менеджера{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">📊 Панель менеджера</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">💰 Выручка сегодня</h3>
+                <div class="value" style="font-size: 1.8rem; font-weight: 700; color: #212529; margin: 0.5rem 0;">{{ "%.2f"|format(stats.today.revenue_today or 0) }} ₽</div>
+                <small class="text-muted">{{ stats.today.sales_today or 0 }} продаж</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">📈 Средний чек</h3>
+                <div class="value" style="font-size: 1.8rem; font-weight: 700; color: #212529; margin: 0.5rem 0;">{{ "%.2f"|format(stats.today.avg_sale_today or 0) }} ₽</div>
+                <small class="text-muted">за сегодня</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">⚠️ Товаров мало</h3>
+                <div class="value {% if stats.low_stock|length > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size: 1.8rem; font-weight: 700; margin: 0.5rem 0;">
+                    {{ stats.low_stock|length }}
+                </div>
+                <small class="text-muted">требуют пополнения</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow-sm" style="background-color: #D9E2EC; border: 1px solid #dee2e6; border-radius: 12px;">
+                <h3 style="color: #6c757d; font-size: 1rem; text-transform: uppercase;">📦 Всего товаров</h3>
+                <div class="value" style="font-size: 1.8rem; font-weight: 700; color: #212529; margin: 0.5rem 0;">{{ stats.total_items or 0 }}</div>
+                <small class="text-muted">единиц на складе</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="{{ url_for('manager.pos') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-cash-register fa-2x mb-3 text-dark"></i>
+                <h3>Терминал продаж</h3>
+                <p class="small text-dark text-opacity-75 mb-0">Открыть POS-интерфейс</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('manager.products') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-boxes fa-2x mb-3 text-dark"></i>
+                <h3>Склад / Товары</h3>
+                <p class="small text-dark text-opacity-75 mb-0">Управление остатками</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('admin.sales_history') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-history fa-2x mb-3 text-dark"></i>
+                <h3>История продаж</h3>
+                <p class="small text-dark text-opacity-75 mb-0">📜 Всего операций: {{ stats.total_sales_count or 0 }}</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('manager.customers') }}" class="stat-card-link-blue shadow-sm">
+                <i class="fas fa-users fa-2x mb-3 text-dark"></i>
+                <h3>Клиентская база</h3>
+                <p class="small text-dark text-opacity-75 mb-0">Покупатели: {{ stats.customers_count or 0 }}</p>
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4" style="background-color: #D9E2EC; border: 1px solid #dee2e6 !important; border-radius: 12px;">
+        <div class="card-body">
+            <h5 class="mb-3 text-dark"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Критический уровень остатков</h5>   
+            {% if stats.low_stock %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width: 120px;">SKU</th>
+                            <th>Название</th>
+                            <th>Категория</th>
+                            <th>Цена</th>
+                            <th>Склад</th>
+                            <th class="text-center">Статус</th>
+                            <th style="width: 150px;" class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in stats.low_stock %}
+                        <tr>
+                            <td class="fw-bold">{{ product.sku or product.vendor_code }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ product.name }}</div>
+                                <small class="text-muted">{{ product.brand or '' }}</small>
+                            </td>
+                            <td>{{ product.category_name or '—' }}</td>
+                            <td class="fw-bold text-nowrap">{{ "{:,.2f}".format(product.price) if product.price else '0.00' }} ₽</td>
+                            <td>
+                                <span class="text-danger fw-bold">
+                                    {{ product.stock_quantity or product.total_stock }} шт.
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if product.is_available != False %}
+                                    <span class="badge bg-success">В продаже</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Снят</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('manager.products', search=product.sku or product.vendor_code) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit me-1"></i>⚙ Управление
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center">
+                <p class="text-muted mb-0">Все товары в достаточном количестве</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat-card-link-blue {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 30px 20px;
+        background-color: #D4E8FF;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 12px;
+        height: 100%;
+        text-decoration: none;
+    }
+
+    .stat-card-link-blue:hover {
+        transform: translateY(-5px);
+        filter: brightness(0.95);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-card-link-blue h3 {
+        color: #212529;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+
+    .table thead th {
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: #666;
+        border-top: none;
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,0.04);
+    }
+</style>
+{% endblock %}

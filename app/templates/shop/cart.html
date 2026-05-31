@@ -1,0 +1,163 @@
+{% extends "shop_base.html" %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <i class="fas fa-shopping-cart me-3" style="font-size: 2rem; color: #48BB78;"></i>
+        <h1 class="mb-0">Корзина</h1>
+    </div>
+
+    {% if not cart %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3 class="mb-3">Ваша корзина пуста</h3>
+            <p class="text-muted mb-4">Добавьте товары из нашего каталога</p>
+            <a href="{{ url_for('shop.index') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-store me-2"></i>Перейти к покупкам
+            </a>
+        </div>
+    {% else %}
+        <div class="cart-card mb-3">
+            <div class="table-responsive">
+                <table class="table cart-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>ТОВАР</th>
+                            <th style="width: 150px;" class="text-center">ЦЕНА</th>
+                            <th style="width: 150px;" class="text-center">КОЛИЧЕСТВО</th>
+                            <th style="width: 150px;" class="text-end">СУММА</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart %}
+                        <tr>
+                            <td>
+                                <div class="product-name">{{ item.name }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="price">{{ '%.2f'|format(item.price) }} ₽</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="quantity-badge">{{ item.quantity }}</span>
+                            </td>
+                            <td class="text-end">
+                                <strong class="total-price">{{ '%.2f'|format(item.price * item.quantity) }} ₽</strong>
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('shop.cart_remove', product_id=item.product_id) }}"
+                                   class="btn-remove"
+                                   onclick="return confirm('Удалить товар из корзины?')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="cart-total-bar mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="total-text">Итого к оплате:</div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="total-amount">{{ '%.2f'|format(total_amount) }} ₽</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <a href="{{ url_for('shop.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Продолжить покупки
+            </a>
+            
+            <form method="post" class="d-inline">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle me-2"></i>Оформить заказ
+                </button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    body {
+        background-color: #F0F4F8;
+        color: #243B53;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    
+    .shop-navbar {
+        background-color: #8CA0B5 !important;
+        border-bottom: 2px solid #48BB78;
+    }
+
+    .product-card, .login-card, .register-card, .cart-card, .empty-cart {
+        background-color: #D9E2EC !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+        color: #243B53 !important;
+        border-radius: 12px;
+    }
+
+    .product-title, .login-card h2, .register-card h2, h1, .cart-table th {
+        color: #243B53 !important;
+    }
+
+    .product-vendor, .text-muted {
+        color: #48BB78 !important;
+    }
+
+    .product-price, .cart-total-amount {
+        color: #000000 !important;
+        font-weight: 700;
+    }
+
+    .btn-success, .btn-primary, .btn-login {
+        background-color: #48BB78 !important; /* Цвет кнопок */
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    .btn-success:hover, .btn-primary:hover {
+        background-color: #3ba366 !important;
+    }
+
+    .btn-outline-primary, .btn-outline-secondary {
+        border-color: #8CA0B5 !important;
+        color: #243B53 !important;
+    }
+
+    /* Формы */
+    .form-control {
+        background-color: #ffffff !important;
+        border: 1px solid #8CA0B5 !important;
+        color: #000000 !important;
+    }
+
+    .form-label i {
+        color: #48BB78;
+    }
+
+    .cart-table {
+        color: #243B53 !important;
+    }
+    
+    .cart-table tr {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    footer {
+        background-color: #D9E2EC !important;
+        border-top: 1px solid #8CA0B5 !important;
+        color: #243B53 !important;
+    }
+</style>
+{% endblock %}

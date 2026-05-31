@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Чек продажи{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt {
+        max-width: 400px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border: 1px solid #ddd;
+    }
+    .receipt-header {
+        text-align: center;
+        border-bottom: 2px dashed #ddd;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+    .receipt-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    .receipt-total {
+        border-top: 2px dashed #ddd;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="receipt">
+    <div class="receipt-header">
+        <h4>Компьютерный магазин</h4>
+        <p>г. Москва, ул. Торговая, 5</p>
+        <p>ИНН: 771234567890</p>
+    </div>
+    
+    <div class="mb-3">
+        <div class="receipt-item">
+            <span>Чек №:</span>
+            <span><strong>{{ sale.sale_number }}</strong></span>
+        </div>
+        <div class="receipt-item">
+            <span>Дата:</span>
+            <span>{{ sale.sale_date.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+        <div class="receipt-item">
+            <span>Кассир:</span>
+            <span>{{ sale.employee_name }}</span>
+        </div>
+        {% if sale.customer_name %}
+        <div class="receipt-item">
+            <span>Покупатель:</span>
+            <span>{{ sale.customer_name }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <hr>
+    
+    <div class="mb-3">
+        {% for item in items %}
+        <div class="receipt-item">
+            <div>
+                {{ item.product_name }} <br>
+                <small class="text-muted">{{ item.quantity }} × {{ "%.2f"|format(item.price_at_sale) }} ₽</small>
+                </div>
+            <div>{{ "%.2f"|format(item.quantity * item.price_at_sale) }} ₽</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <hr>
+    
+    <div class="receipt-total">
+        <div class="receipt-item">
+            <span>Итого:</span>
+            <span>{{ "%.2f"|format(sale.total_amount) }} ₽</span>
+        </div>
+        <div class="receipt-item">
+            <span>К оплате:</span>
+            {% set total_to_pay = namespace(value=0) %}
+            {% for item in items %}
+                {% set total_to_pay.value = total_to_pay.value + (item.quantity * item.price_at_sale) %}
+            {% endfor %}
+
+            <span><strong>{{ "%.2f"|format(total_to_pay.value) }} ₽</strong></span>
+        </div>
+        <div class="receipt-item">
+            <span>Оплата:</span>
+            <span>{{ sale.payment_method }}</span>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <p>Спасибо за покупку!</p>
+        <p><small>{{ now.strftime('%d.%m.%Y %H:%M') }}</small></p>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <button class="btn btn-primary" onclick="window.print()">
+        <i class="fas fa-print"></i> Печать
+    </button>
+    <a href="{{ url_for('manager.pos') }}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Новая продажа
+    </a>
+</div>
+{% endblock %}

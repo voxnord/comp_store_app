@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Управление пользователями{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">👥 Управление пользователями</h1>
+
+    <div class="table-container mb-4">
+        <h4 class="mb-3">➕ Регистрация пользователя</h4>
+        <form action="{{ url_for('admin.add_user') }}" method="post" id="addUserForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Фамилия</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Иванов" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Имя</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="Иван" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" name="middle_name" placeholder="Иванович" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Роль</label>
+                    <select name="role_id" id="roleSelect" class="form-control" required>
+                        <option value="">Выберите роль</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Логин</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" placeholder="email@prov.com" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Телефон</label>
+                    <input type="text" name="phone" placeholder="+7 (900) 123-45-67" class="form-control">
+                </div>
+
+                <div id="customerFields" class="row g-3 mt-1" style="display: none;">
+                    <div class="col-md-9">
+                        <label class="form-label">Адрес доставки</label>
+                        <input type="text" name="address" id="addressInput" class="form-control" placeholder="Город, улица, дом...">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="consent_pdn" id="consentInput">
+                            <label class="form-check-label" for="consentInput">Согласие на ПДн</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 text-end mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i> Создать пользователя
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container mb-4">
+        <h4 class="mb-3">👔 Список сотрудников</h4>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                  <tr>
+                      <th>ID</th>
+                      <th>ФИО</th>
+                      <th>Логин</th>
+                      <th>Роль</th>
+                      <th>Должность</th>
+                      <th>Телефон</th>
+                      <th>Email</th>
+                      <th class="col-status">Статус</th> <th style="width: 400px;">Действия</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for emp in employees %}
+                  <tr>
+                      <td>{{ emp.id }}</td>
+                      <td>{{ emp.last_name }} {{ emp.first_name }}</td>
+                      <td>{{ emp.username }}</td>
+                      <td><span class="badge bg-info text-dark">{{ emp.role_name }}</span></td>
+                      <td>{{ emp.position }}</td>
+                      <td>{{ emp.phone }}</td>
+                      <td>{{ emp.email }}</td>
+                      <td class="col-status"> <span class="badge {{ 'bg-success' if emp.is_active else 'bg-danger' }} d-block">
+                              {{ 'Активен' if emp.is_active else 'Заблокирован' }}
+                          </span>
+                      </td>
+                      <td>
+                          <div class="action-grid">
+                              <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editUserModal" 
+                                    data-user-id="{{ emp.id }}" 
+                                    data-username="{{ emp.username }}" 
+                                    data-last-name="{{ emp.last_name }}"
+                                    data-first-name="{{ emp.first_name }}"
+                                    data-middle-name="{{ emp.middle_name or '' }}"
+                                    data-position="{{ emp.position }}"
+                                    data-email="{{ emp.email or '' }}"
+                                    data-phone="{{ emp.phone or '' }}"
+                                    data-role-id="{{ emp.role_id }}">
+                                  <i class="fas fa-edit me-1"></i>⚙ Изменить
+                              </button>
+                              
+                              <form action="{{ url_for('admin.toggle_user', user_id=emp.id) }}" method="post">
+                                  <button type="submit" class="btn {{ 'btn-danger' if emp.is_active else 'btn-success' }}">
+                                      <i class="fas {{ 'fa-ban' if emp.is_active else 'fa-check' }} me-1"></i>
+                                      {{ '❌ Блок' if emp.is_active else '✅ Разблок' }}
+                                  </button>
+                              </form>
+
+                              <form action="{{ url_for('admin.delete_user', user_id=emp.id) }}" method="post" 
+                                    onsubmit="return confirm('Удалить сотрудника?');">
+                                  <button type="submit" class="btn btn-outline-danger">
+                                      <i class="fas fa-trash me-1"></i>🗑 Удалить
+                                  </button>
+                              </form>
+                          </div>
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <h4 class="mb-4">👥 Список клиентов</h4>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                  <tr>
+                      <th>User ID</th>
+                      <th>Фамилия</th>
+                      <th>Имя</th>
+                      <th>Логин</th>
+                      <th>Телефон</th>
+                      <th>Email</th>
+                      <th>ПДн</th>
+                      <th class="col-status">Статус</th>
+                      <th style="width: 400px;">Действия</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for cust in customers %}
+                  <tr>
+                      <td>{{ cust.user_id }}</td>
+                      <td>{{ cust.last_name }}</td>
+                      <td>{{ cust.first_name }}</td>
+                      <td>{{ cust.username }}</td>
+                      <td>{{ cust.phone }}</td>
+                      <td>{{ cust.customer_email }}</td>
+                      <td>
+                          {% if cust.consent_pdn %}
+                              <span class="text-success fw-bold">Да</span>
+                          {% else %}
+                              <span class="text-danger fw-bold">Нет</span>
+                          {% endif %}
+                      </td>
+                      <td class="col-status">
+                          <span class="badge {{ 'bg-success' if cust.is_active else 'bg-danger' }} d-block">
+                              {{ 'Активен' if cust.is_active else 'Заблокирован' }}
+                          </span>
+                      </td>
+                      <td>
+                          <div class="action-grid">
+                              <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editCustomerModal" 
+                                      data-id="{{ cust.customer_id }}"
+                                      data-username="{{ cust.username }}"
+                                      data-last-name="{{ cust.last_name }}" 
+                                      data-first-name="{{ cust.first_name }}" 
+                                      data-phone="{{ cust.phone }}" 
+                                      data-email="{{ cust.customer_email }}" 
+                                      data-address="{{ cust.address }}"
+                                      data-consent="{{ 'true' if cust.consent_pdn else 'false' }}">
+                                  <i class="fas fa-user-edit me-1"></i>⚙ Изменить
+                              </button>
+
+                              <form action="{{ url_for('admin.toggle_user', user_id=cust.user_id) }}" method="post">
+                                  <button type="submit" class="btn {{ 'btn-danger' if cust.is_active else 'btn-success' }}">
+                                      <i class="fas {{ 'fa-ban' if cust.is_active else 'fa-check' }} me-1"></i>
+                                      {{ '❌ Блок' if cust.is_active else '✅ Разблок' }}
+                                  </button>
+                              </form>
+
+                              <form action="{{ url_for('admin.delete_user', user_id=cust.user_id) }}" method="post" 
+                                    onsubmit="return confirm('Удалить клиента?');">
+                                  <button type="submit" class="btn btn-outline-danger">
+                                      <i class="fas fa-trash me-1"></i>🗑 Удалить
+                                  </button>
+                              </form>
+                          </div>
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content text-dark">
+      <div class="modal-header">
+        <h5 class="modal-title">Редактировать сотрудника</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editUserForm" method="post">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Фамилия</label>
+                <input type="text" name="last_name" id="edit-emp-last-name" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Имя</label>
+                <input type="text" name="first_name" id="edit-emp-first-name" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Отчество</label>
+                <input type="text" name="middle_name" id="edit-emp-middle-name" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Логин</label>
+                <input type="text" name="username" id="edit-emp-username" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Должность</label>
+                <input type="text" name="position" id="edit-emp-position" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" id="edit-emp-email" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Телефон</label>
+                <input type="text" name="phone" id="edit-emp-phone" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Роль</label>
+                <select name="role_id" id="edit-emp-role" class="form-control">
+                    {% for role in roles %}
+                    <option value="{{ role.id }}">{{ role.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Новый пароль (оставьте пустым)</label>
+                <input type="password" name="password" class="form-control">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content text-dark">
+      <div class="modal-header">
+        <h5 class="modal-title">Редактировать данные клиента</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editCustomerForm" method="post">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Логин</label>
+              <input type="text" name="username" id="cust-username" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" id="cust-email" class="form-control">
+            </div>
+
+            <hr class="my-2">
+
+            <div class="col-md-6">
+              <label class="form-label">Фамилия</label>
+              <input type="text" name="last_name" id="cust-last-name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Имя</label>
+              <input type="text" name="first_name" id="cust-first-name" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Телефон</label>
+              <input type="text" name="phone" id="cust-phone" class="form-control">
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="consent_pdn" id="cust-consent">
+                <label class="form-check-label">Согласие ПДн</label>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Адрес</label>
+              <textarea name="address" id="cust-address" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var editUserModal = document.getElementById('editUserModal');
+    editUserModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-user-id');
+        
+        var form = document.getElementById('editUserForm');
+        form.action = "{{ url_for('admin.edit_user', user_id=0) }}".replace('0', userId);
+        
+        document.getElementById('edit-emp-username').value = button.getAttribute('data-username');
+        document.getElementById('edit-emp-last-name').value = button.getAttribute('data-last-name');
+        document.getElementById('edit-emp-first-name').value = button.getAttribute('data-first-name');
+        document.getElementById('edit-emp-middle-name').value = button.getAttribute('data-middle-name');
+        document.getElementById('edit-emp-position').value = button.getAttribute('data-position');
+        document.getElementById('edit-emp-email').value = button.getAttribute('data-email');
+        document.getElementById('edit-emp-phone').value = button.getAttribute('data-phone');
+        document.getElementById('edit-emp-role').value = button.getAttribute('data-role-id');
+    });
+
+    var editCustModal = document.getElementById('editCustomerModal');
+    editCustModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var custId = button.getAttribute('data-id');
+        
+        var form = document.getElementById('editCustomerForm');
+        form.action = "{{ url_for('admin.edit_customer', customer_id=0) }}".replace('0', custId);
+        
+        document.getElementById('cust-username').value = button.getAttribute('data-username');
+        document.getElementById('cust-last-name').value = button.getAttribute('data-last-name');
+        document.getElementById('cust-first-name').value = button.getAttribute('data-first-name');
+        document.getElementById('cust-email').value = button.getAttribute('data-email');
+        document.getElementById('cust-phone').value = button.getAttribute('data-phone');
+        document.getElementById('cust-address').value = button.getAttribute('data-address');
+        var consentVal = button.getAttribute('data-consent');
+        document.getElementById('cust-consent').checked = (consentVal === 'true');
+    });
+});
+document.getElementById('roleSelect').addEventListener('change', function() {
+    const customerFields = document.getElementById('customerFields');
+    const addressInput = document.getElementById('addressInput');
+    const consentInput = document.getElementById('consentInput');
+    
+    if (this.value === "4") {
+        customerFields.style.display = 'flex';
+        addressInput.required = true;
+        consentInput.required = true;
+    } else {
+        customerFields.style.display = 'none';
+        addressInput.required = false;
+        consentInput.required = false;
+        addressInput.value = '';
+        consentInput.checked = false;
+    }
+});
+</script>
+{% endblock %}
