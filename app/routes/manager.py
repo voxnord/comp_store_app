@@ -28,7 +28,6 @@ def products():
 @role_required('Менеджер', 'Администратор')
 def add_product():
     try:
-        # Получаем данные из формы, включая минимальный остаток
         data = {
             'category_id': request.form.get('category_id'),
             'sku': request.form.get('sku'),
@@ -37,11 +36,10 @@ def add_product():
             'description': request.form.get('description'),
             'price': request.form.get('price'),
             'stock_quantity': request.form.get('stock_quantity'),
-            'min_stock_level': request.form.get('min_stock_level', 0), # Новое поле
+            'min_stock_level': request.form.get('min_stock_level', 0),
             'is_available': 'is_available' in request.form
         }
         
-        # Проверка: если категория не выбрана (пустая строка), ставим None
         if not data['category_id']:
             data['category_id'] = None
 
@@ -64,7 +62,7 @@ def edit_product(product_id):
             'description': request.form.get('description'),
             'price': request.form.get('price'),
             'stock_quantity': request.form.get('stock_quantity'),
-            'min_stock_level': request.form.get('min_stock_level'), # Проверьте наличие в модели
+            'min_stock_level': request.form.get('min_stock_level'),
             'is_available': 'is_available' in request.form
         }
         Product.update(product_id, data)
@@ -80,7 +78,6 @@ def delete_product(product_id):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        # Проверяем, нет ли товара в продажах, прежде чем удалять (зависит от вашей БД)
         cur.execute("DELETE FROM product WHERE id = %s", (product_id,))
         conn.commit()
         flash('Товар удален', 'success')
@@ -116,8 +113,8 @@ def update_stock(product_id):
 @role_required('Менеджер', 'Администратор')
 def pos():
     """Страница оформления заказа менеджером (Point of Sale)"""
-    products = Product.get_all() # Получаем все доступные товары
-    customers = Customer.get_all() # Получаем список клиентов для выбора
+    products = Product.get_all()
+    customers = Customer.get_all()
     return render_template('manager/pos.html', 
                            products=products, 
                            customers=customers)
@@ -138,13 +135,10 @@ def create_order():
         return jsonify({'error': 'Корзина пуста'}), 400
 
     try:
-        # Проверяем наличие необходимых ключей в каждом товаре перед отправкой в модель
         for item in items:
             if 'product_id' not in item or 'quantity' not in item:
                 return jsonify({'error': 'Некорректные данные товаров'}), 400
-            # Если ваша модель Sale.create_transaction требует цену с фронта:
             if 'price' not in item:
-                # Можно либо вернуть ошибку, либо попытаться взять цену из БД (но лучше прислать с фронта)
                 return jsonify({'error': f'Отсутствует цена для товара ID {item.get("product_id")}'}), 400
 
         sale_id = Sale.create_transaction(
@@ -156,7 +150,6 @@ def create_order():
         return jsonify({'success': True, 'sale_id': sale_id})
         
     except Exception as e:
-        # Печатаем ошибку в консоль сервера для отладки
         print(f"Ошибка при создании заказа: {e}") 
         return jsonify({'error': str(e)}), 500
 
@@ -178,15 +171,12 @@ def add_customer():
     cur = conn.cursor()
     
     try:
-        # ID роли клиента в системе (убедитесь, что в таблице role клиенты идут под ID 4)
         CUSTOMER_ROLE_ID = 4 
         default_password = generate_password_hash('123456')
         
-        # Если логин не заполнен, берем телефон в качестве логина
         username = data.get('username') or data.get('phone')
         email = data.get('email') if data.get('email') else None
         
-        # 1. Создаем запись в таблице "user"
         cur.execute("""
             INSERT INTO "user" (username, password_hash, email, role_id, is_active)
             VALUES (%s, %s, %s, %s, TRUE)
@@ -195,7 +185,6 @@ def add_customer():
         
         user_id = cur.fetchone()[0]
 
-        # 2. Создаем запись в таблице customer (теперь и с email, и с user_id)
         cur.execute("""
             INSERT INTO customer (user_id, first_name, last_name, phone, email, address, consent_pdn)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -204,7 +193,7 @@ def add_customer():
             data['first_name'], 
             data['last_name'], 
             data.get('phone'), 
-            email, # <-- Записываем email также и сюда
+            email,
             data.get('address'),
             'consent_pdn' in data
         ))
@@ -230,7 +219,6 @@ def edit_customer(customer_id):
     try:
         email = data.get('email') if data.get('email') else None
         
-        # Обновляем данные клиента (включая email)
         cur.execute("""
             UPDATE customer 
             SET first_name = %s, last_name = %s, phone = %s, email = %s, address = %s, consent_pdn = %s
@@ -244,9 +232,7 @@ def edit_customer(customer_id):
             'consent_pdn' in data,
             customer_id
         ))
-        
-        # Опционально: если нужно обновить email и в таблице "user", 
-        # то сначала нужно узнать user_id этого клиента:
+
         cur.execute("SELECT user_id FROM customer WHERE id = %s", (customer_id,))
         user_id_row = cur.fetchone()
         if user_id_row and user_id_row[0]:
@@ -271,7 +257,6 @@ def print_receipt(sale_id):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Получаем основные данные продажи
         cur.execute("""
             SELECT s.*, c.first_name || ' ' || c.last_name as customer_name, c.phone as customer_phone
             FROM sale s
@@ -280,7 +265,6 @@ def print_receipt(sale_id):
         """, (sale_id,))
         sale = cur.fetchone()
         
-        # Получаем товары в чеке
         cur.execute("""
             SELECT si.*, p.name as product_name
             FROM sale_item si

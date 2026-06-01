@@ -238,7 +238,7 @@ def delete_user(user_id):
         conn.close()
     return redirect(url_for('admin.users'))
 
-# --- Категории (чтобы не ломались ссылки в шаблоне) ---
+# --- Категории
 
 @bp.route('/categories')
 @login_required
@@ -246,7 +246,6 @@ def delete_user(user_id):
 def categories():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    # Используем LEFT JOIN, чтобы получить имя родительской категории
     cur.execute("""
         SELECT c1.*, c2.name as parent_name
         FROM category c1
@@ -357,7 +356,6 @@ def customers():
 @login_required
 @role_required('Администратор', 'Менеджер')
 def sales_history():
-    # Получаем параметры из URL
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     search = request.args.get('search', '')
@@ -442,7 +440,6 @@ def get_sale_details(sale_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     try:
-        # Берем цену напрямую из таблицы product (p.price)
         cur.execute("""
             SELECT 
                 si.quantity, 
@@ -474,7 +471,7 @@ def get_sale_details(sale_id):
 @role_required('Администратор', 'Менеджер')
 def update_sale_status(sale_id):
     data = request.json
-    field = data.get('field')  # 'status' или 'payment_method'
+    field = data.get('field')
     value = data.get('value')
     
     if field not in ['status', 'payment_method']:
@@ -483,7 +480,6 @@ def update_sale_status(sale_id):
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        # Динамически обновляем нужное поле
         cur.execute(f"UPDATE sale SET {field} = %s WHERE id = %s", (value, sale_id))
         conn.commit()
         return jsonify({'success': True})

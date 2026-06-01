@@ -1,6 +1,3 @@
-"""
-Модели данных для системы учета компьютерной техники
-"""
 from .utils import get_db_connection
 from psycopg2.extras import RealDictCursor
 from datetime import datetime

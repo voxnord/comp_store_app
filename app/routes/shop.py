@@ -33,8 +33,6 @@ def index():
 
     try:
         if search:
-            # Если запрос в queries.py не возвращает категорию, 
-            # мы добавим JOIN прямо здесь или используем тот же SQL, что в блоке else
             cur.execute("""
                 SELECT p.id, p.name, p.sku, p.price, p.stock_quantity, c.name as category_name
                 FROM product p
@@ -191,7 +189,6 @@ def logout():
 def add_to_cart():
     """Добавить товар в корзину с учетом выбранного количества."""
     product_id = request.form.get('product_id', type=int)
-    # Считываем введенное пользователем количество, по умолчанию 1
     quantity_to_add = request.form.get('quantity', default=1, type=int)
     
     if not product_id:
@@ -222,7 +219,6 @@ def add_to_cart():
                 flash('Товара нет в наличии', 'warning')
                 return redirect(url_for('shop.index'))
 
-            # Проверка, не запрашивает ли пользователь больше, чем есть на складе
             if stock is not None and quantity_to_add > stock:
                 flash(f'Недостаточно товара (доступно: {stock})', 'warning')
                 return redirect(url_for('shop.index'))
@@ -233,7 +229,6 @@ def add_to_cart():
             for item in cart:
                 if item['product_id'] == product_id_val:
                     new_quantity = item['quantity'] + quantity_to_add
-                    # Проверка лимита склада при обновлении существующей позиции
                     if stock is None or new_quantity <= stock:
                         item['quantity'] = new_quantity
                         found = True
@@ -246,7 +241,7 @@ def add_to_cart():
                     'product_id': product_id_val,
                     'name': name,
                     'price': float(price),
-                    'quantity': quantity_to_add # Используем переданное количество
+                    'quantity': quantity_to_add
                 })
             
             save_cart(cart)
@@ -283,14 +278,10 @@ def cart_view():
         cur = conn.cursor()
 
         try:
-            # 1. Получаем customer_id, связанный с этим пользователем
-            # В вашей схеме в sale должен быть именно customer_id, а не user_id
             cur.execute('SELECT id FROM customer WHERE email = (SELECT email FROM "user" WHERE id = %s)', (user_id,))
             customer_row = cur.fetchone()
             customer_id = customer_row[0] if customer_row else None
 
-            # 2. Оформляем заказ в соответствии со схемой таблицы sale
-            # Поля payment_status, warehouse_id, notes удалены, так как их нет в схеме
             cur.execute("""
                 INSERT INTO sale (
                     sale_number,
@@ -303,10 +294,10 @@ def cart_view():
                 VALUES (
                     CONCAT('WEB-', TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')),
                     %s,
-                    NULL, -- В онлайн-заказе сотрудник может быть не назначен сразу
+                    NULL,
                     %s,
                     'новый',
-                    'карта' -- Значение по умолчанию из разрешенных CHECK (наличные, карта, перевод)
+                    'карта'
                 )
                 RETURNING id
             """, (
@@ -315,7 +306,6 @@ def cart_view():
             ))
             sale_id = cur.fetchone()[0]
 
-            # 3. Добавляем товары (в схеме таблица называется sale_item, а не sale_items)
             for item in cart:
                 cur.execute("""
                     INSERT INTO sale_item (
@@ -332,7 +322,6 @@ def cart_view():
                     item['price']
                 ))
 
-                # Уменьшаем остаток на складе
                 cur.execute("""
                     UPDATE product 
                     SET stock_quantity = stock_quantity - %s 
