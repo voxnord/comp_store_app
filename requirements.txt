@@ -2,3 +2,5 @@ Flask
 psycopg2-binary
 python-dotenv
 werkzeug
+pytest
+pytest-mock
