@@ -113,3 +113,40 @@ def test_user_get_by_id(app, mock_db):
         
         assert user.id == 10
         assert user.username == 'test_user'
+
+
+# 7. Тест получения всех товаров (Product.get_all)
+def test_product_get_all(app, mock_db):
+    mock_conn, mock_cur = mock_db
+    mock_cur.fetchall.return_value = [
+        {'id': 1, 'name': 'Laptop', 'sku': 'LT01', 'price': 500, 'stock_quantity': 10, 'is_available': True, 'category_id': 1, 'brand': 'BrandX'}
+    ]
+    with patch('app.models.get_db_connection', return_value=mock_conn):
+        products = Product.get_all()
+        assert len(products) == 1
+        assert products[0].name == 'Laptop'
+
+# 8. Тест поиска товаров (Product.get_all с параметром search)
+def test_product_search_logic(app, mock_db):
+    mock_conn, mock_cur = mock_db
+    with patch('app.models.get_db_connection', return_value=mock_conn):
+        Product.get_all(search="Ryzen")
+        args, _ = mock_cur.execute.call_args
+        assert '%Ryzen%' in args[1]
+
+# 9. Тест модели Категории (Category.get_all)
+def test_category_get_all(app, mock_db):
+    mock_conn, mock_cur = mock_db
+    # Эмулируем возврат RealDictCursor
+    mock_cur.fetchall.return_value = [{'id': 1, 'name': 'Процессоры', 'parent_id': None}]
+    with patch('app.models.get_db_connection', return_value=mock_conn):
+        categories = Category.get_all()
+        # ТАК КАК get_all возвращает список объектов класса Category
+        assert categories[0].name == 'Процессоры'
+
+# 10. Тест создания клиента (Customer)
+def test_customer_initialization():
+    customer = Customer(id=1, first_name="Aleksey", last_name="Petrov", phone="123456")
+    assert customer.first_name == "Aleksey"
+    assert customer.phone == "123456"
+    
